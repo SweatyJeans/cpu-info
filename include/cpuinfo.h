@@ -136,6 +136,15 @@ extern void InitCPUInfo(struct cpu_info* info);
 #define CPU_INFO_AVX512F(info)                      ((info).avx_support & (1 << 5)) //NOTE > If this macro returns 1 (true) AVX512-f (AVX512 Foundation) is completety safe to use
 
 
+/*
+* This function is an easy way to print out all gathered information
+* In the future it's planed that you can use this project as an fast CLI tool too to this is the beginning of the CLI part
+*
+* You call this function with a pointer to printf and a pointer to a cpu_info structure so you need the stdio.h header
+* The call looks like this:
+*
+* PrintCPUInfo(&printf, &info);
+*/
 static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_info* info) {
     print_func(
         "INFO:\n\n"
