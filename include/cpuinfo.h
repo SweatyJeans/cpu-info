@@ -145,6 +145,7 @@ static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_
         "\t* Theads per core: %i\n"
         "\t* Physical cores: %i\n"
         "\t* Logical cores: %i\n"
+        "\t* Hyperthreading: %s\n"
         "\nSSE:\n\n"
         "\t* SSE: %s\n"
         "\t* SSE2: %s\n"
@@ -165,6 +166,9 @@ static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_
         "\nCRYPTOGRAPHY:\n\n"
         "\t* AES-NI: %s\n"
         "\t* SHA (1 and 256): %s\n"
+        "\nHYPERVISOR:\n\n"
+        "\t* Hypervisor: %s\n"
+        "\t* Hypervisor ID: %s\n"
         "\nOTHERS:\n\n"
         "\t* XSAVE: %s\n"
         "\t* OSXSAVE: %s\n"
@@ -178,6 +182,7 @@ static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_
         CPU_INFO_THREADS_PER_CORE(*info),
         info->physical_cores,
         CPU_INFO_LOGICAL_CORES(*info),
+        CPU_INFO_HYPERTHREADING(*info) ? "active" : "disabled",
         CPU_INFO_SSE(*info) ? "yes" : "no",
         CPU_INFO_SSE2(*info) ? "yes" : "no",
         CPU_INFO_SSE3(*info) ? "yes" : "no",
@@ -194,6 +199,8 @@ static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_
         CPU_INFO_RDSEED(*info) ? "yes" : "no",
         CPU_INFO_AESNI(*info) ? "yes" : "no",
         CPU_INFO_SHA(*info) ? "yes" : "no",
+        CPU_INFO_HYPERVISOR(*info) ? "active" : "disabled",
+        *info->hypervisor_id ? info->hypervisor_id : "disabled",
         CPU_INFO_XSAVE(*info) ? "yes" : "no",
         CPU_INFO_OSXSAVE(*info) ? "yes" : "no",
         CPU_INFO_MMX(*info) ? "yes" : "no",
