@@ -48,7 +48,7 @@ SECTION .text
 
         ;SSE,SSE2,SSE3,AVX,AES etc.
         MOV eax,1
-        cpuid
+        CPUID
 
         MOV [rdi+16],eax
         MOV [rdi+20],ebx

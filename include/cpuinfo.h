@@ -108,21 +108,97 @@ extern void InitCPUInfo(struct cpu_info* info);
 #define CPU_INFO_PHYSICAL_CORES(info)               (info).physical_cores
 #define CPU_INFO_HYPERTHREADING(info)               (CPU_INFO_THREADS_PER_CORE(info) > 1)
 
-#define CPU_INFO_SSE(info)                          ((info).leaf1_edx & (1ULL << 25))
-#define CPU_INFO_SSE2(info)                         ((info).leaf1_edx & (1ULL << 26))
-#define CPU_INFO_SSE3(info)                         ((info).leaf1_ecx & 1ULL)
-#define CPU_INFO_AESNI(info)                        ((info).leaf1_ecx & (1ULL << 25))
-#define CPU_INFO_XSAVE(info)                        ((info).leaf1_ecx & (1ULL << 26))
-#define CPU_INFO_OSXSAVE(info)                      ((info).leaf1_ecx & (1ULL << 27))
-#define CPU_INFO_AVX_CPU_SIDE(info)                 ((info).leaf1_ecx & (1ULL << 28)) //Checks if the CPU supports AVX instructions -> that doesn't mean that ur OS provides them too
-#define CPU_INFO_RDRAND(info)                       ((info).leaf1_ecx & (1ULL << 30))
-#define CPU_INFO_AVX2_CPU_SIDE(info)                ((info).leaf7_ebx & (1ULL << 5)) //Checks if the CPU supports AVX2 instructions (again) -> that doesn't mean that ur OS provides them too
-#define CPU_INFO_AVX512F_CPU_SIDE(info)             ((info).leaf7_ebx & (1ULL << 16)) //Check if the CPU supports AVX512-f (again) -> that doesn't mean that ur OS provides them too
-#define CPU_INFO_SHA(info)                          ((info).leaf7_ebx & (1ULL << 29)) //Checks for support for the SHA-1 and SHA-256 extension
+#define CPU_INFO_SSE(info)                          ((info).leaf1_edx & (1 << 25))
+#define CPU_INFO_SSE2(info)                         ((info).leaf1_edx & (1 << 26))
+#define CPU_INFO_SSE3(info)                         ((info).leaf1_ecx & 1)
+#define CPU_INFO_SSSE3(info)                        ((info).leaf1_ecx & (1 << 9))
+#define CPU_INFO_SSE4_1(info)                       ((info).leaf1_ecx & (1 << 19)) //SSE4.1
+#define CPU_INFO_SSE4_2(info)                       ((info).leaf1_ecx & (1 << 20)) //SSE4.2
+#define CPU_INFO_AESNI(info)                        ((info).leaf1_ecx & (1 << 25))
+#define CPU_INFO_XSAVE(info)                        ((info).leaf1_ecx & (1 << 26))
+#define CPU_INFO_OSXSAVE(info)                      ((info).leaf1_ecx & (1 << 27))
+#define CPU_INFO_AVX_CPU_SIDE(info)                 ((info).leaf1_ecx & (1 << 28)) //Checks if the CPU supports AVX instructions -> that doesn't mean that ur OS provides them too
+#define CPU_INFO_MMX(info)                          ((info).leaf1_edx & (1 << 23))
 
-#define CPU_INFO_HYPERVISOR(info)                   ((info).leaf1_ecx & (1ULL << 31)) //Returns 1 if a hypervisor is active
+#define CPU_INFO_RDRAND(info)                       ((info).leaf1_ecx & (1 << 30))
+#define CPU_INFO_RDSEED(info)                       ((info).leaf7_ebx & (1 << 18))
+#define CPU_INFO_AVX2_CPU_SIDE(info)                ((info).leaf7_ebx & (1 << 5)) //Checks if the CPU supports AVX2 instructions (again) -> that doesn't mean that ur OS provides them too
+#define CPU_INFO_AVX512F_CPU_SIDE(info)             ((info).leaf7_ebx & (1 << 16)) //Check if the CPU supports AVX512-f (again) -> that doesn't mean that ur OS provides them too
+#define CPU_INFO_SHA(info)                          ((info).leaf7_ebx & (1 << 29)) //Checks for support for the SHA-1 and SHA-256 extension
+#define CPU_INFO_BMI1(info)                         ((info).leaf7_ebx & (1 << 3))
+#define CPU_INFO_BMI2(info)                         ((info).leaf7_ebx & (1 << 8))
+
+#define CPU_INFO_HYPERVISOR(info)                   ((info).leaf1_ecx & (1 << 31)) //Returns 1 if a hypervisor is active
 
 //AVX_SUPPORT TESTS
-#define CPU_INFO_AVX(info)                          ((info).avx_support & 1ULL) //NOTE > the first bit of avx_support is just set when both the CPU and the OS support AVX instructions, so when this bit is set you don't have to check the CPU support for AVX as well
-#define CPU_INFO_AVX2(info)                         ((info).avx_support & (1ULL << 4)) //NOTE > If this macro returns 1 (true) AVX2 is completety safe to use
-#define CPU_INFO_AVX512F(info)                      ((info).avx_support & (1ULL << 5)) //NOTE > If this macro returns 1 (true) AVX512-f (AVX512 Foundation) is completety safe to use
+#define CPU_INFO_AVX(info)                          ((info).avx_support & 1) //NOTE > the first bit of avx_support is just set when both the CPU and the OS support AVX instructions, so when this bit is set you don't have to check the CPU support for AVX as well
+#define CPU_INFO_AVX2(info)                         ((info).avx_support & (1 << 4)) //NOTE > If this macro returns 1 (true) AVX2 is completety safe to use
+#define CPU_INFO_AVX512F(info)                      ((info).avx_support & (1 << 5)) //NOTE > If this macro returns 1 (true) AVX512-f (AVX512 Foundation) is completety safe to use
+
+
+static inline void PrintCPUInfo(int (*print_func)(const char*, ...), struct cpu_info* info) {
+    print_func(
+        "INFO:\n\n"
+        "\t* VendorID: %s\n"
+        "\t* BrandString: %s\n\t"
+        "\nCORES:\n\n"
+        "\t* Theads per core: %i\n"
+        "\t* Physical cores: %i\n"
+        "\t* Logical cores: %i\n"
+        "\nSSE:\n\n"
+        "\t* SSE: %s\n"
+        "\t* SSE2: %s\n"
+        "\t* SSE3: %s\n"
+        "\t* SSSE3: %s\n"
+        "\t* SSE4.1: %s\n"
+        "\t* SSE4.2: %s\n"
+        "\nAVX:\n\n"
+        "\t* AVX (OS): %s\n"
+        "\t* AVX (CPU): %s\n"
+        "\t* AVX-2 (OS): %s\n"
+        "\t* AVX-2 (CPU): %s\n"
+        "\t* AVX-512f (OS): %s\n"
+        "\t* AVX-512f (CPU): %s\n"
+        "\nRANDOM:\n\n"
+        "\t* RDRAND: %s\n"
+        "\t* RDSEED: %s\n"
+        "\nCRYPTOGRAPHY:\n\n"
+        "\t* AES-NI: %s\n"
+        "\t* SHA (1 and 256): %s\n"
+        "\nOTHERS:\n\n"
+        "\t* XSAVE: %s\n"
+        "\t* OSXSAVE: %s\n"
+        "\t* MMX: %s\n"
+        "\t* BMI1: %s\n"
+        "\t* BMI2: %s\n"
+        , 
+        
+        info->vendor_id, 
+        info->brand_string,
+        CPU_INFO_THREADS_PER_CORE(*info),
+        info->physical_cores,
+        CPU_INFO_LOGICAL_CORES(*info),
+        CPU_INFO_SSE(*info) ? "yes" : "no",
+        CPU_INFO_SSE2(*info) ? "yes" : "no",
+        CPU_INFO_SSE3(*info) ? "yes" : "no",
+        CPU_INFO_SSSE3(*info) ? "yes" : "no",
+        CPU_INFO_SSE4_1(*info) ? "yes" : "no",
+        CPU_INFO_SSE4_2(*info) ? "yes" : "no",
+        CPU_INFO_AVX(*info) ? "yes" : "no",
+        CPU_INFO_AVX_CPU_SIDE(*info) ? "yes" : "no",
+        CPU_INFO_AVX2(*info) ? "yes" : "no",
+        CPU_INFO_AVX2_CPU_SIDE(*info) ? "yes" : "no",
+        CPU_INFO_AVX512F(*info) ? "yes" : "no",
+        CPU_INFO_AVX512F_CPU_SIDE(*info) ? "yes" : "no",
+        CPU_INFO_RDRAND(*info) ? "yes" : "no",
+        CPU_INFO_RDSEED(*info) ? "yes" : "no",
+        CPU_INFO_AESNI(*info) ? "yes" : "no",
+        CPU_INFO_SHA(*info) ? "yes" : "no",
+        CPU_INFO_XSAVE(*info) ? "yes" : "no",
+        CPU_INFO_OSXSAVE(*info) ? "yes" : "no",
+        CPU_INFO_MMX(*info) ? "yes" : "no",
+        CPU_INFO_BMI1(*info) ? "yes" : "no",
+        CPU_INFO_BMI2(*info) ? "yes" : "no"
+
+    );
+}
